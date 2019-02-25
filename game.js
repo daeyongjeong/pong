@@ -121,6 +121,7 @@ function gameStart() {
   };
 
   document.onmousemove = movePaddle;
+  canvas.addEventListener("touchmove", movePaddleT);
 
   gameTimeLast = new Date();
   gameUpdate();
@@ -129,6 +130,17 @@ function gameStart() {
 function movePaddle(event) {
   let y;
   y = event.pageY;
+
+  if (
+    y - game.playerHeight / 2 >= tdBorder &&
+    y + game.playerHeight / 2 <= height - tdBorder
+  )
+    game.player.y = y;
+}
+
+function movePaddleT(event) {
+  let y;
+  y = event.changedTouches.pageY;
 
   if (
     y - game.playerHeight / 2 >= tdBorder &&

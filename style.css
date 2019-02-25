@@ -1,0 +1,104 @@
+html {
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+body {
+  background-color: #333333;
+  display: block;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+#game-container {
+  background-color: black;
+  color: white;
+  margin: auto;
+}
+
+/* Title Screen */
+#titleScreen {
+  padding: 1.5em 4em 1.5em 4em;
+  position: relative;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+#titleScreen p {
+  text-align: left;
+}
+
+#titleScreen h1 {
+  margin-top: 0;
+}
+
+#playButton {
+  margin-top: 0.5em;
+}
+
+#playButton:hover {
+  opacity: 0.8;
+}
+
+/* Play Screen */
+#playScreen {
+  position: relative;
+}
+
+#gameCanvas {
+  position: relative;
+  top: 0;
+  left: 0;
+}
+
+#computerScore,
+#playerScore {
+  position: relative;
+  top: -9.1667em;
+  left: 0em;
+  width: 34.0625%;
+  opacity: 0.8;
+  font-size: 3em;
+}
+
+#computerScore {
+  float: left;
+  text-align: right;
+}
+#playerScore {
+  float: right;
+  text-align: left;
+}
+
+/**/
+
+.ingamebuttons {
+  position: relative;
+  top: -10em;
+  left: 0;
+  text-align: center;
+
+  float: left;
+}
+
+/* Buttons */
+#playButton,
+#pauseButton,
+#soundButton {
+  background-color: black;
+  border: 0.2em solid white;
+  color: inherit;
+  font-size: inherit;
+  padding: 0.3em 1em;
+  opacity: 0.5;
+}
+
+.hidden {
+  display: none;
+}

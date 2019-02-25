@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Pong | daeyongjeong</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+  </head>
+  <body>
+    <!--Document-->
+    <div id="game-container">
+      <div id="titleScreen">
+        <h1>Pong!</h1>
+        <p>
+          This game is based on the HTML5 elements <b>canvas</b> and
+          <b>audio</b>. With some simple javascript to make it work.
+        </p>
+        <p>
+          To play this game you need a modern web browser with support for
+          HTML5. Audio only works with Firefox 3.5+ at the moment.
+        </p>
+        <button id="playButton">Play!</button>
+      </div>
+      <div id="playScreen" class="hidden">
+        <canvas id="gameCanvas">
+          <p>Your browser <b>does not</b> support HTML5!</p>
+        </canvas>
+        <div id="computerScore">0</div>
+        <div id="playerScore">0</div>
+        <div class="ingamebuttons hidden">
+          <button id="pauseButton">Pause</button>
+          <button id="soundButton">Turn off sound</button>
+        </div>
+        <div id="pauseText" class="hidden">Paused</div>
+      </div>
+    </div>
+
+    <!--JavaScript-->
+    <script src="game.js"></script>
+  </body>
+</html>

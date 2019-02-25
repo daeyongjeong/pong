@@ -139,6 +139,8 @@ function movePaddle(event) {
 }
 
 function movePaddleT(event) {
+  event.preventDefault();
+  event.stopPropagation();
   let y;
   y = event.changedTouches.pageY;
 

@@ -20,7 +20,7 @@
  */
 
 var container, canvas, ctx, game, gameTimeLast;
-var unitSize, width, height, fontSize, tdBorder, lrBorder;
+var unit, width, height, fontSize, tdBorder, lrBorder;
 
 const BACKGROUND_COLOR = "black";
 const COLOR = "white";
@@ -40,37 +40,43 @@ function init() {
 }
 
 function resizeHandler() {
-  let lastUnitSize = unitSize;
-  unitSize = getUnitSize();
-  let resizeRatio = unitSize / lastUnitSize;
+  let lastUnit = unit;
+  unit = getunit();
+  let resizeRatio = unit / lastUnit;
 
-  width = 640.0 * unitSize;
-  height = 480.0 * unitSize;
-  fontSize = 16.0 * unitSize;
-  tdBorder = 24.0 * unitSize;
-  lrBorder = 64.0 * unitSize;
+  width = 640.0 * unit;
+  height = 480.0 * unit;
+  fontSize = 16.0 * unit;
+  tdBorder = 24.0 * unit;
+  lrBorder = 64.0 * unit;
 
   container.style.width = `${width}px`;
   container.style.height = `${height}px`;
   container.style.fontSize = `${fontSize}px`;
 
   if (document.getElementById("titleScreen").classList.contains("hidden")) {
-    game.lineSize = 3 * unitSize;
-    game.lineDash = 7 * unitSize;
-    game.lineGap = 7 * unitSize;
+    game.player.x *= resizeRatio;
     game.player.y *= resizeRatio;
+
+    game.computer.x *= resizeRatio;
     game.computer.y *= resizeRatio;
+
     game.ball.x *= resizeRatio;
     game.ball.y *= resizeRatio;
     game.ball.vx *= resizeRatio;
     game.ball.vy *= resizeRatio;
-    game.playerWidth = 8 * unitSize;
-    game.playerHeight = 32 * unitSize;
+    game.ball.radius *= resizeRatio;
+
+    game.lineSize = 3 * unit;
+    game.lineDash = 7 * unit;
+    game.lineGap = 7 * unit;
+    game.playerWidth = 8 * unit;
+    game.playerHeight = 32 * unit;
     draw();
   }
 }
 
-function getUnitSize() {
+function getunit() {
   let width = window.innerWidth;
   let height = window.innerHeight;
 
@@ -88,10 +94,12 @@ function gameStart() {
   // all in-game variables
   game = {
     player: {
+      x: width - lrBorder * 2 + 4 * unit,
       y: height / 2,
       score: 0
     },
     computer: {
+      x: lrBorder * 2 - 4 * unit,
       y: height / 2,
       score: 0,
       speed: 2
@@ -99,29 +107,28 @@ function gameStart() {
     ball: {
       x: width / 2,
       y: height / 2,
-      vx: Math.round(Math.random()) ? 1 * unitSize : -1 * unitSize,
-      vy: (Math.random() * 4 - 2) * unitSize,
+      vx: Math.round(Math.random()) ? 1 * unit : -1 * unit,
+      vy: (Math.random() * 4 - 2) * unit,
       bounces: 0,
-      radius: 5 * unitSize,
+      radius: 5 * unit,
       reset: function() {
         this.x = width / 2;
         this.y = height / 2;
-        this.vy = (Math.random() * 4 - 2) * unitSize;
+        this.vy = (Math.random() * 4 - 2) * unit;
       },
       multiplier: 0.2,
       maxSpeed: 5
     },
-    lineSize: 3 * unitSize,
-    lineDash: 7 * unitSize,
-    lineGap: 7 * unitSize,
-    playerHeight: 32 * unitSize,
-    playerWidth: 8 * unitSize,
+    lineSize: 3 * unit,
+    lineDash: 7 * unit,
+    lineGap: 7 * unit,
+    playerHeight: 32 * unit,
+    playerWidth: 8 * unit,
     pause: false,
     sound: true
   };
 
   document.onmousemove = movePaddle;
-  canvas.addEventListener("touchmove", movePaddleT);
 
   gameTimeLast = new Date();
   gameUpdate();
@@ -130,19 +137,6 @@ function gameStart() {
 function movePaddle(event) {
   let y;
   y = event.pageY;
-
-  if (
-    y - game.playerHeight / 2 >= tdBorder &&
-    y + game.playerHeight / 2 <= height - tdBorder
-  )
-    game.player.y = y;
-}
-
-function movePaddleT(event) {
-  event.preventDefault();
-  event.stopPropagation();
-  let y;
-  y = event.changedTouches.pageY;
 
   if (
     y - game.playerHeight / 2 >= tdBorder &&
@@ -186,47 +180,83 @@ function gameUpdate() {
       game.ball.vy *= -1;
     }
 
-    /* checking collision between ball and player */
-    if (
-      game.ball.x + game.ball.radius >= width - lrBorder * 2 &&
-      game.ball.x + game.ball.radius <= width - lrBorder * 2 + game.playerWidth
-    ) {
+    function isCollision(player) {
+      let rect = {
+        left: player.x - game.playerWidth / 2,
+        right: player.x + game.playerWidth / 2,
+        top: player.y - game.playerHeight / 2,
+        bottom: player.y + game.playerHeight / 2
+      };
+
       if (
-        game.ball.y - game.ball.radius >=
-          game.player.y - game.playerHeight / 2 - Math.sqrt(game.ball.radius) &&
-        game.ball.y + game.ball.radius <=
-          game.player.y + game.playerHeight / 2 + Math.sqrt(game.ball.radius)
+        (rect.left <= game.ball.x && game.ball.x <= rect.right) ||
+        (rect.top <= game.ball.y && game.ball.y <= rect.bottom)
       ) {
-        if (game.ball.vx <= game.ball.maxspeed) {
-          game.ball.vx += game.ball.multiplier;
+        (rect.left = player.x - game.playerWidth / 2 - game.ball.radius),
+          (rect.right = player.x + game.playerWidth / 2 + game.ball.radius),
+          (rect.top = player.y - game.playerHeight / 2 - game.ball.radius),
+          (rect.bottom = player.y + game.playerHeight / 2 + game.ball.radius);
+
+        if (
+          rect.left <= game.ball.x &&
+          game.ball.x <= rect.right &&
+          rect.top <= game.ball.y &&
+          game.ball.y <= rect.bottom
+        ) {
+          return true;
         }
-        changeBallDirection(game.player);
-      }
-    } else if (
-      game.ball.x - game.ball.radius <= lrBorder * 2 &&
-      game.ball.x - game.ball.radius >= lrBorder * 2 - game.playerWidth
-    ) {
-      /* checking collision between ball and cpu */
-      if (
-        game.ball.y - game.ball.radius >=
-          game.computer.y -
-            game.playerHeight / 2 -
-            Math.sqrt(game.ball.radius) &&
-        game.ball.y + game.ball.radius <=
-          game.computer.y + game.playerHeight / 2 + Math.sqrt(game.ball.radius)
-      ) {
-        if (game.ball.vx >= -game.ball.maxspeed) {
-          game.ball.vx -= game.ball.multiplier;
+      } else {
+        function getDistance(x1, x2, y1, y2) {
+          let a = x1 - x2 > 0 ? x1 - x2 : x2 - x1;
+          let b = y1 - y2 > 0 ? y1 - y2 : y2 - y1;
+
+          return Math.sqrt(a * a + b * b);
         }
-        changeBallDirection(game.computer);
+
+        if (
+          getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
+          game.ball.radius
+        )
+          return true;
+        if (
+          getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
+          game.ball.radius
+        )
+          return true;
+        if (
+          getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
+          game.ball.radius
+        )
+          return true;
+        if (
+          getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
+          game.ball.radius
+        )
+          return true;
       }
     }
+
+    /* checking collision between ball and player */
+    if (isCollision(game.player)) {
+      if (game.ball.vx <= game.ball.maxspeed) {
+        game.ball.vx += game.ball.multiplier;
+      }
+      changeBallDirection(game.player);
+    } else if (isCollision(game.computer)) {
+      /* checking collision between ball and cpu */
+
+      if (game.ball.vx >= -game.ball.maxspeed) {
+        game.ball.vx -= game.ball.multiplier;
+      }
+      changeBallDirection(game.computer);
+    }
+
     // hit the right border -> game over
     if (game.ball.x + game.ball.radius >= width - lrBorder) {
       game.computer.score++;
       document.getElementById("computerScore").innerHTML = game.computer.score;
       game.ball.reset();
-      game.ball.vx = -1 * unitSize;
+      game.ball.vx = -1 * unit;
     }
 
     // hit the left border -> game over
@@ -234,7 +264,7 @@ function gameUpdate() {
       game.player.score++;
       document.getElementById("playerScore").innerHTML = game.player.score;
       game.ball.reset();
-      game.ball.vx = 1 * unitSize;
+      game.ball.vx = 1 * unit;
     }
   }
   game.ball.x += game.ball.vx * moveAmount;

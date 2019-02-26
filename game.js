@@ -18,6 +18,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
+init();
 
 var container, canvas, ctx, game, gameTimeLast;
 var unit, width, height, fontSize, tdBorder, lrBorder;
@@ -72,7 +73,9 @@ function resizeHandler() {
     game.lineGap = 7 * unit;
     game.playerWidth = 8 * unit;
     game.playerHeight = 32 * unit;
-    draw();
+
+    canvas.width = width;
+    canvas.height = height;
   }
 }
 
@@ -145,13 +148,69 @@ function movePaddle(event) {
     game.player.y = y;
 }
 
-function gameUpdate() {
-  dateTime = new Date();
+function getDistance(x1, x2, y1, y2) {
+  let a = x1 - x2 > 0 ? x1 - x2 : x2 - x1;
+  let b = y1 - y2 > 0 ? y1 - y2 : y2 - y1;
 
-  gameTime = dateTime - gameTimeLast;
+  return Math.sqrt(a * a + b * b);
+}
+
+function isCollision(player) {
+  let rect = {
+    left: player.x - game.playerWidth / 2,
+    right: player.x + game.playerWidth / 2,
+    top: player.y - game.playerHeight / 2,
+    bottom: player.y + game.playerHeight / 2
+  };
+
+  if (
+    (rect.left <= game.ball.x && game.ball.x <= rect.right) ||
+    (rect.top <= game.ball.y && game.ball.y <= rect.bottom)
+  ) {
+    (rect.left = player.x - game.playerWidth / 2 - game.ball.radius),
+      (rect.right = player.x + game.playerWidth / 2 + game.ball.radius),
+      (rect.top = player.y - game.playerHeight / 2 - game.ball.radius),
+      (rect.bottom = player.y + game.playerHeight / 2 + game.ball.radius);
+
+    if (
+      rect.left <= game.ball.x &&
+      game.ball.x <= rect.right &&
+      rect.top <= game.ball.y &&
+      game.ball.y <= rect.bottom
+    ) {
+      return true;
+    }
+  } else {
+    if (
+      getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
+      game.ball.radius
+    )
+      return true;
+    if (
+      getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
+      game.ball.radius
+    )
+      return true;
+    if (
+      getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
+      game.ball.radius
+    )
+      return true;
+    if (
+      getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
+      game.ball.radius
+    )
+      return true;
+  }
+}
+
+function gameUpdate() {
+  let dateTime = new Date();
+
+  let gameTime = dateTime - gameTimeLast;
   if (gameTime < 0) gameTime = 0;
 
-  moveAmount = gameTime > 0 ? gameTime / 10 : 1;
+  let moveAmount = gameTime > 0 ? gameTime / 10 : 1;
 
   if (!game.pause) {
     /* Move cpu player */
@@ -180,75 +239,19 @@ function gameUpdate() {
       game.ball.vy *= -1;
     }
 
-    function isCollision(player) {
-      let rect = {
-        left: player.x - game.playerWidth / 2,
-        right: player.x + game.playerWidth / 2,
-        top: player.y - game.playerHeight / 2,
-        bottom: player.y + game.playerHeight / 2
-      };
-
-      if (
-        (rect.left <= game.ball.x && game.ball.x <= rect.right) ||
-        (rect.top <= game.ball.y && game.ball.y <= rect.bottom)
-      ) {
-        (rect.left = player.x - game.playerWidth / 2 - game.ball.radius),
-          (rect.right = player.x + game.playerWidth / 2 + game.ball.radius),
-          (rect.top = player.y - game.playerHeight / 2 - game.ball.radius),
-          (rect.bottom = player.y + game.playerHeight / 2 + game.ball.radius);
-
-        if (
-          rect.left <= game.ball.x &&
-          game.ball.x <= rect.right &&
-          rect.top <= game.ball.y &&
-          game.ball.y <= rect.bottom
-        ) {
-          return true;
-        }
-      } else {
-        function getDistance(x1, x2, y1, y2) {
-          let a = x1 - x2 > 0 ? x1 - x2 : x2 - x1;
-          let b = y1 - y2 > 0 ? y1 - y2 : y2 - y1;
-
-          return Math.sqrt(a * a + b * b);
-        }
-
-        if (
-          getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
-          game.ball.radius
-        )
-          return true;
-        if (
-          getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
-          game.ball.radius
-        )
-          return true;
-        if (
-          getDistance(rect.left, game.ball.x, rect.top, game.ball.y) <=
-          game.ball.radius
-        )
-          return true;
-        if (
-          getDistance(rect.left, game.ball.x, rect.bottom, game.ball.y) <=
-          game.ball.radius
-        )
-          return true;
-      }
-    }
-
     /* checking collision between ball and player */
     if (isCollision(game.player)) {
       if (game.ball.vx <= game.ball.maxspeed) {
         game.ball.vx += game.ball.multiplier;
       }
-      changeBallDirection(game.player);
+      setTimeout(changeBallDirection(game.player), 100);
     } else if (isCollision(game.computer)) {
       /* checking collision between ball and cpu */
 
       if (game.ball.vx >= -game.ball.maxspeed) {
         game.ball.vx -= game.ball.multiplier;
       }
-      changeBallDirection(game.computer);
+      setTimeout(changeBallDirection(game.computer), 100);
     }
 
     // hit the right border -> game over
@@ -288,15 +291,11 @@ function changeBallDirection(player) {
   game.ball.vx *= -1;
 }
 
-function draw() {
-  canvas.width = width;
-  canvas.height = height;
-
-  // background
+function drawBackground() {
   ctx.fillStyle = BACKGROUND_COLOR;
   ctx.fillRect(0, 0, width, height);
-
-  // center line
+}
+function drawLine() {
   ctx.fillStyle = COLOR;
   for (
     let y = tdBorder;
@@ -310,17 +309,14 @@ function draw() {
       game.lineDash
     );
   }
-
-  // left player
+}
+function drawBall() {
   ctx.fillStyle = COLOR;
-  ctx.fillRect(
-    lrBorder * 2 - game.playerWidth / 2,
-    game.computer.y - game.playerHeight / 2,
-    game.playerWidth,
-    game.playerHeight
-  );
-
-  // right player
+  let ball = new Path2D();
+  ball.arc(game.ball.x, game.ball.y, game.ball.radius, 0, 2 * Math.PI);
+  ctx.fill(ball);
+}
+function drawPlayerPaddle() {
   ctx.fillStyle = COLOR;
   ctx.fillRect(
     width - lrBorder * 2 - game.playerWidth / 2,
@@ -328,12 +324,22 @@ function draw() {
     game.playerWidth,
     game.playerHeight
   );
-
-  // ball
+}
+function drawComputerPaddle() {
   ctx.fillStyle = COLOR;
-  let ball = new Path2D();
-  ball.arc(game.ball.x, game.ball.y, game.ball.radius, 0, 2 * Math.PI);
-  ctx.fill(ball);
+  ctx.fillRect(
+    lrBorder * 2 - game.playerWidth / 2,
+    game.computer.y - game.playerHeight / 2,
+    game.playerWidth,
+    game.playerHeight
+  );
 }
 
-init();
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  drawBackground();
+  drawLine();
+  drawBall();
+  drawPlayerPaddle();
+  drawComputerPaddle();
+}
